@@ -1,0 +1,27 @@
+{
+  "name": "unione-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for the UniOne transactional email API",
+  "bin": {
+    "unione-mcp": "bin/run.js"
+  },
+  "files": [
+    "bin/",
+    "assets.json"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "email",
+    "unione"
+  ],
+  "homepage": "https://github.com/unione-repo/unione-mcp#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/unione-repo/unione-mcp.git"
+  },
+  "license": "MIT"
+}

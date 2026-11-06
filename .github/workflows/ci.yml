@@ -1,0 +1,27 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: go vet ./...
+      - run: go test -race ./internal/... ./cmd/...
+      - name: acceptance
+        run: |
+          docker run -d --rm -p 8081:8081 wiremock/wiremock:3.4.1 --local-response-templating --port 8081
+          for _ in $(seq 30); do curl -fs http://localhost:8081/__admin/health && break; sleep 1; done
+          curl -fsS http://localhost:8081/__admin/health
+          E2E_WIREMOCK_URL=http://localhost:8081 go test -tags=integration -count=1 ./tests/...
