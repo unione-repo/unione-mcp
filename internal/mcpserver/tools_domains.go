@@ -31,7 +31,7 @@ func registerDomains(r *registry) {
 		description: "Sender domains of the account with their verification state (domain/list): domains[] carries domain, " +
 			"verification-record {value, status confirmed|unconfirmed} and dkim {key, status active|inactive}. " +
 			"A domain can send once its verification record is confirmed and DKIM is active. " +
-			"The sandbox domain is never listed here — get it with [[tool:domain.sandbox]].",
+			"The sandbox domain is never listed here; [[tool:domain.sandbox]] returns it.",
 		annotations: readOnly(),
 		schema: func(s *jsonschema.Schema) {
 			pageLimit(s, 100)
@@ -51,7 +51,7 @@ func registerDomains(r *registry) {
 		description: "DNS records the user must publish for a sender domain (domain/get-dns-records). Adds the domain to the account " +
 			"if it is not there yet; repeating the call returns the same records. Answers verification-record " +
 			"(a TXT record for the domain itself), dkim (the public key for the TXT record at us._domainkey.<domain>) and dmarc. " +
-			"Hand the records to the user; once they are published, check them with [[tool:domain.validate]]. " +
+			"Published records are checked by [[tool:domain.validate]]. " +
 			"Free-mail domains (gmail.com and the like) are refused. " + sandboxNotHere,
 		annotations: write(),
 		schema:      func(s *jsonschema.Schema) { minLength(s, "domain", 1) },
@@ -65,8 +65,8 @@ func registerDomains(r *registry) {
 		description: "Checks that the user published the records from [[tool:domain.dns_records]]: calls " +
 			"domain/validate-verification-record and domain/validate-dkim and answers both results " +
 			"({domain, verification_record, dkim}), each [[name]]'s own answer or its error. " +
-			"DNS changes can take up to a day to propagate: a failed check right after publishing is normal — tell the user to retry later. " +
-			"A domain that is not added yet has to go through [[tool:domain.dns_records]] first. " + sandboxNotHere,
+			"A failed check right after publishing is normal; DNS changes can take up to a day. " +
+			"A domain that is not added yet is refused; [[tool:domain.dns_records]] adds it. " + sandboxNotHere,
 		annotations: readOnly(),
 		schema:      func(s *jsonschema.Schema) { minLength(s, "domain", 1) },
 	}, func(ctx context.Context, c *caller, in domainArg) *mcp.CallToolResult {

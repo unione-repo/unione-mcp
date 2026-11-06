@@ -15,6 +15,9 @@ type Brand struct {
 	// Name is how instructions, descriptions and errors call the product.
 	Name    string
 	DocsURL string
+	// APIRefURL is the docs page of the Web API reference, whose sections tool
+	// descriptions link to; empty when the brand has no such page.
+	APIRefURL string
 	// EnvPrefix names the brand's variables: <EnvPrefix>_API_KEY, <EnvPrefix>_API_URL.
 	EnvPrefix string
 	// Defaults for <EnvPrefix>_API_URL, AUTHORIZATION_SERVER_URL and OAUTH_TOKEN_PREFIX;
@@ -49,8 +52,9 @@ func (b Brand) Tool(id string) string {
 
 // Render fills a text written for every brand: [[name]] is the product name,
 // [[tool:email.send]] a tool's name, [[api_key_env]] and [[api_url_env]] the
-// variables of the API key and URL, and [[docs_ref]] " (<docs URL>)" or nothing
-// when the brand has no docs. The texts sit in Go strings and struct tags, so the
+// variables of the API key and URL, [[docs_ref]] " (<docs URL>)" or nothing
+// when the brand has no docs, and [[api_ref:webhook]] ", <API reference URL>#webhook"
+// or nothing when the brand has no API reference page. The texts sit in Go strings and struct tags, so the
 // markers need no quotes, and they are not {{ }} because the texts quote the API's
 // own {{placeholder}} syntax. An unknown marker is a programming error.
 func (b Brand) Render(text string) string {
@@ -70,6 +74,11 @@ func (b Brand) Render(text string) string {
 				return ""
 			}
 			return " (" + b.DocsURL + ")"
+		case name == "api_ref" && arg != "":
+			if b.APIRefURL == "" {
+				return ""
+			}
+			return ", " + b.APIRefURL + "#" + arg
 		}
 		panic(fmt.Sprintf("brand: unknown marker %s", m))
 	})

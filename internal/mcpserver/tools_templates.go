@@ -46,7 +46,7 @@ func registerTemplates(r *registry) {
 		name:  "template.list",
 		title: "List templates",
 		description: "Stored email templates, newest first (template/list): templates[] with id, name, subject, from_email, body and more. " +
-			"Page with limit/offset — a page shorter than limit is the last one.",
+			"Paged by limit/offset; a page shorter than limit is the last one.",
 		annotations: readOnly(),
 		schema: func(s *jsonschema.Schema) {
 			pageLimit(s, 100)
@@ -73,9 +73,9 @@ func registerTemplates(r *registry) {
 		name:  "template.set",
 		title: "Create or overwrite template",
 		description: "Creates a template (no id; name is required) or OVERWRITES an existing one (template/set with id). " +
-			"An overwrite replaces the template with exactly what is passed: subject, from_name, headers and the body parts left out " +
-			"are cleared, and every future email sent from the template changes. To change one field, read the template with " +
-			"[[tool:template.get]] and pass all its fields back with the change. Answers the saved {template}.",
+			"An overwrite replaces the template with exactly what is passed, and every future email sent from the template changes. " +
+			"Fields left out are cleared (subject, from_name, headers, body parts); the current values are returned by " +
+			"[[tool:template.get]]. Answers the saved {template}.",
 		annotations: dangerous(),
 		schema: func(s *jsonschema.Schema) {
 			minLength(s, "from_email", 3)

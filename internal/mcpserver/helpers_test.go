@@ -23,7 +23,16 @@ import (
 )
 
 func newUpstream(b brand.Brand, baseURL string) *upstream.Client {
-	return upstream.New(b, baseURL, "test", time.Second, 1<<20, slog.New(slog.DiscardHandler))
+	up := upstream.New(b, baseURL, "test", time.Second, 1<<20, slog.New(slog.DiscardHandler))
+	up.HTTP.Transport = ownTransport()
+	return up
+}
+
+// ownTransport keeps a test off http.DefaultTransport: httptest.Server.Close
+// calls DefaultTransport.CloseIdleConnections, which breaks the connections of
+// the tests running in parallel ("http: CloseIdleConnections called").
+func ownTransport() http.RoundTripper {
+	return http.DefaultTransport.(*http.Transport).Clone()
 }
 
 // The unit tests run as the brand of the build (brand.Current) and call every
@@ -241,7 +250,7 @@ func callViaBearer(t *testing.T, fake *fakeAPI, cfg *config.Config, bearer, name
 
 	transport := &mcp.StreamableClientTransport{
 		Endpoint:             front.URL,
-		HTTPClient:           &http.Client{Transport: keyTransport{key: bearer}},
+		HTTPClient:           &http.Client{Transport: keyTransport{key: bearer, base: ownTransport()}},
 		DisableStandaloneSSE: true,
 	}
 	ctx := context.Background()
@@ -257,10 +266,13 @@ func callViaBearer(t *testing.T, fake *fakeAPI, cfg *config.Config, bearer, name
 	return res
 }
 
-type keyTransport struct{ key string }
+type keyTransport struct {
+	key  string
+	base http.RoundTripper
+}
 
 func (k keyTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	req = req.Clone(req.Context())
 	req.Header.Set("Authorization", "Bearer "+k.key)
-	return http.DefaultTransport.RoundTrip(req)
+	return k.base.RoundTrip(req)
 }

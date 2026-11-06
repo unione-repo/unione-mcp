@@ -45,7 +45,7 @@ type sendEmailArgs struct {
 	GlobalLanguage      string            `json:"global_language,omitempty" jsonschema:"language of the unsubscribe footer and page"`
 	SendAt              string            `json:"send_at,omitempty" jsonschema:"delayed send time, UTC 'YYYY-MM-DD hh:mm:ss', at most 24 hours ahead; omit to send now"`
 	UnsubscribeURL      string            `json:"unsubscribe_url,omitempty" jsonschema:"own unsubscribe link instead of [[name]]'s (only if the account is allowed to)"`
-	IdempotenceKey      string            `json:"idempotence_key,omitempty" jsonschema:"up to 64 characters; a repeat with the same key is refused instead of sent twice — set it whenever a call may be retried"`
+	IdempotenceKey      string            `json:"idempotence_key,omitempty" jsonschema:"up to 64 characters; a repeat with the same key is refused instead of sent twice, which makes a retried call safe"`
 	Attachments         []attachment      `json:"attachments,omitempty" jsonschema:"files attached to the email"`
 	InlineAttachments   []attachment      `json:"inline_attachments,omitempty" jsonschema:"images embedded into the html via cid:<name>"`
 }
@@ -61,14 +61,15 @@ const sendEmailTool = "email.send"
 func registerSend(r *registry) {
 	add(r, toolSpec{
 		name:  sendEmailTool,
-		title: "Send email",
+		title: "Send email (billed)",
 		description: "REALLY sends an email to real recipients (email/send); it cannot be recalled. Each recipient gets a separate copy; " +
-			"put the addresses in recipients, never in headers. The body is html (a full document with a <body> tag) and/or plaintext, " +
+			"the addresses go in recipients, not in headers. The body is html (a full document with a <body> tag) and/or plaintext, " +
 			"or template_id of a stored template. from_email must be on a domain with a confirmed verification record and active DKIM " +
 			"([[tool:domain.list]]), or on the sandbox domain — which delivers only to addresses confirmed with [[tool:confirmed_email.add]] " +
 			"(code 1598 otherwise) and at most 100 emails a day (code 1599). send_at delays the send by up to 24 hours. " +
 			"Answers job_id, emails (accepted) and failed_emails {email: reason} for the recipients [[name]] dropped " +
-			"(invalid, duplicate, unsubscribed, …); a suppressed address is explained by [[tool:suppression.get]].",
+			"(invalid, duplicate, unsubscribed, …); a suppressed address is explained by [[tool:suppression.get]]. " +
+			"Each accepted email is billed against the account's emails (emails_sent in [[tool:account.get]]).",
 		annotations: dangerous(),
 		openWorld:   true,
 		schema: func(s *jsonschema.Schema) {

@@ -4,6 +4,7 @@ var current = Brand{
 	Key:         "unione",
 	Name:        "UniOne",
 	DocsURL:     "https://docs.unione.io",
+	APIRefURL:   "https://docs.unione.io/en/web-api-ref",
 	EnvPrefix:   "UNIONE",
 	APIURL:      "https://api.unione.io/en/transactional/api/v1",
 	TokenPrefix: "uoat_",

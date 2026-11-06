@@ -45,7 +45,7 @@ func registerSuppressions(r *registry) {
 		title: "Get suppression of an address",
 		description: "Why and since when [[name]] does not send to an address (suppression/get): {email, suppressions[]} with cause, " +
 			"source, created and is_deletable per block; an empty suppressions[] means the address is not blocked. " +
-			"Use it when a recipient lands in failed_emails of [[tool:email.send]] or never gets mail.",
+			"Explains why a recipient lands in failed_emails of [[tool:email.send]] or never gets mail.",
 		annotations: readOnly(),
 		schema:      func(s *jsonschema.Schema) { minLength(s, "email", 3) },
 	}, func(ctx context.Context, c *caller, in getSuppressionArgs) *mcp.CallToolResult {
@@ -58,8 +58,8 @@ func registerSuppressions(r *registry) {
 		name:  "suppression.list",
 		title: "List suppressions",
 		description: "Blocked addresses of the account (suppression/list): suppressions[] with email, cause, source, created and " +
-			"is_deletable, plus cursor — pass it back to get the next page; a null cursor means this was the last page. " +
-			"Filter by cause, source or start_time instead of paging through everything.",
+			"is_deletable, plus cursor, which leads to the next page; a null cursor means this was the last page. " +
+			"cause, source and start_time narrow the list.",
 		annotations: readOnly(),
 		schema: func(s *jsonschema.Schema) {
 			enum(s, "cause", suppressionCauses...)
@@ -99,8 +99,8 @@ func registerSuppressions(r *registry) {
 		title: "Unblock an address",
 		description: "Removes the blocks on an address so sends reach it again (suppression/delete). Only blocks with is_deletable=true " +
 			"(see [[tool:suppression.get]]) can go — any other answers error 3004. Removals have a daily limit per account; " +
-			"over it the answer is error 906, try again tomorrow. Unblocking someone who unsubscribed or complained means mailing " +
-			"a person who asked not to be mailed — make sure the user knows.",
+			"over it the answer is error 906 until the next day. Unblocking an address that unsubscribed or complained means mailing " +
+			"a person who asked not to be mailed.",
 		annotations: dangerous(),
 		schema:      func(s *jsonschema.Schema) { minLength(s, "email", 3) },
 	}, func(ctx context.Context, c *caller, in deleteSuppressionArgs) *mcp.CallToolResult {

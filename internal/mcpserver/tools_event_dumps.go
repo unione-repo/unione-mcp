@@ -45,9 +45,9 @@ func registerEventDumps(r *registry) {
 		name:  "event_dump.create",
 		title: "Request event dump",
 		description: "Queues a CSV export of sending events for a period (event-dump/create) and answers {dump_id} at once; the file is built " +
-			"in the background. Poll [[tool:event_dump.get]] with the dump_id until dump_status is ready and hand the user the file URLs. " +
-			"The account can hold only a few dumps at a time — delete finished ones with [[tool:event_dump.delete]]. " +
-			"Use it for questions like \"what happened to the emails sent yesterday\" or \"who bounced\".",
+			"in the background. The file is ready when [[tool:event_dump.get]] reports dump_status ready. " +
+			"The account can hold only a few dumps at a time; [[tool:event_dump.delete]] frees a slot. " +
+			"Answers questions like \"what happened to the emails sent yesterday\" or \"who bounced\".",
 		annotations: write(),
 		schema: func(s *jsonschema.Schema) {
 			pattern(s, "start_time", timePattern)
@@ -87,7 +87,7 @@ func registerEventDumps(r *registry) {
 		title: "Get event dump",
 		description: "State of a dump from [[tool:event_dump.create]] (event-dump/get): event_dump {dump_id, dump_status queued|in_process|ready|failed, " +
 			"files[] {url, size}}. Files are complete only once dump_status is ready; a big period is split into several files. " +
-			"While it is queued or in_process, wait before asking again instead of polling in a tight loop.",
+			"A dump usually takes several minutes to build.",
 		annotations: readOnly(),
 		schema:      func(s *jsonschema.Schema) { pattern(s, "dump_id", uuidPattern) },
 	}, func(ctx context.Context, c *caller, in dumpIDArg) *mcp.CallToolResult {

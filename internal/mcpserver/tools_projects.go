@@ -34,7 +34,7 @@ type createProjectArgs struct {
 type updateProjectArgs struct {
 	ProjectID     string `json:"project_id,omitempty" jsonschema:"project id from [[tool:project.list]] — preferred way to pick the project"`
 	ProjectAPIKey string `json:"project_api_key,omitempty" jsonschema:"the project's API key, only when the id is unknown"`
-	Name          string `json:"name" jsonschema:"project name; required on every update — pass the current one to keep it"`
+	Name          string `json:"name" jsonschema:"project name; required on every update; the current name keeps it"`
 	projectFields
 	EmailCounterLimit *int64 `json:"email_counter_limit,omitempty" jsonschema:"most emails the project may send per counter period; 0 removes the limit"`
 	EmailCounterMode  string `json:"email_counter_mode,omitempty" jsonschema:"default resets the counter every billing period, permanent never resets it"`
@@ -72,8 +72,7 @@ func registerProjects(r *registry) {
 		name:  "project.create",
 		title: "Create project",
 		description: "Creates a project — a separate sender inside the account with its own API key, templates, webhooks and statistics " +
-			"(project/create). Answers project_id and project_api_key: the key comes back only in this answer, show it to the user " +
-			"right away so they can put it into their integration. A project key limits every call made with it to that project's data. " +
+			"(project/create). Answers project_id and project_api_key. The key is returned only once, in this response. A project key limits every call made with it to that project's data. " +
 			projectsOnly,
 		annotations: write(),
 		schema: func(s *jsonschema.Schema) {
@@ -93,8 +92,8 @@ func registerProjects(r *registry) {
 		name:  "project.update",
 		title: "Update project",
 		description: "OVERWRITES a project's settings (project/update). Pick the project by project_id (preferred) or project_api_key, " +
-			"one of them. name is required every time, and backend_domain_id and unsubscribe_page_id are reset when left out — " +
-			"read the project with [[tool:project.list]] and pass them back. send_enabled=false stops the project's sending at once; " +
+			"one of them. name is required every time; fields left out are cleared, backend_domain_id and unsubscribe_page_id included. " +
+			"The current values are returned by [[tool:project.list]]. send_enabled=false stops the project's sending at once; " +
 			"reset_email_counter sets its counter back to 0. " + projectsOnly,
 		annotations: dangerous(),
 		schema: func(s *jsonschema.Schema) {

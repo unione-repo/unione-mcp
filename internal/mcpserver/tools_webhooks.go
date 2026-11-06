@@ -36,7 +36,7 @@ func registerWebhooks(r *registry) {
 	add(r, toolSpec{
 		name:  "webhook.list",
 		title: "List webhooks",
-		description: "Webhooks of the account, newest first (webhook/list): objects[] with id, url, status, event_format, " +
+		description: "Webhooks of the account, newest first (webhook/list[[api_ref:webhook]]): objects[] with id, url, status, event_format, " +
 			"delivery_info, single_event, max_parallel, updated_at and events {email_status[], spam_block[]}.",
 		annotations: readOnly(),
 		schema: func(s *jsonschema.Schema) {
@@ -53,7 +53,7 @@ func registerWebhooks(r *registry) {
 	add(r, toolSpec{
 		name:        "webhook.get",
 		title:       "Get webhook",
-		description: "One webhook with its settings, found by its handler url (webhook/get): {object: {id, url, status, events, …}}.",
+		description: "One webhook with its settings, found by its handler url (webhook/get[[api_ref:webhook]]): {object: {id, url, status, events, …}}.",
 		annotations: readOnly(),
 		schema:      func(s *jsonschema.Schema) { minLength(s, "url", 1) },
 	}, func(ctx context.Context, c *caller, in webhookURLArg) *mcp.CallToolResult {
@@ -63,10 +63,10 @@ func registerWebhooks(r *registry) {
 	add(r, toolSpec{
 		name:  "webhook.set",
 		title: "Create or overwrite webhook",
-		description: "Creates a webhook for a handler url, or OVERWRITES the one that already has this url (webhook/set). " +
-			"An overwrite replaces all its settings with what is passed, [[name]] defaults for the rest — read the current ones with " +
-			"[[tool:webhook.get]] and pass them back with the change. Pass email_status and/or spam_block: a webhook needs events. " +
-			"To pause a webhook without losing it, set status=disabled instead of deleting it. Answers the saved {object}.",
+		description: "Creates a webhook for a handler url, or OVERWRITES the one that already has this url (webhook/set[[api_ref:webhook]]). " +
+			"An overwrite replaces all its settings with what is passed: fields left out are reset to [[name]] defaults; the current values " +
+			"are returned by [[tool:webhook.get]]. A webhook needs events: email_status and/or spam_block. " +
+			"status=disabled pauses a webhook without losing it. Answers the saved {object}.",
 		annotations: dangerous(),
 		openWorld:   true,
 		schema: func(s *jsonschema.Schema) {
@@ -83,8 +83,8 @@ func registerWebhooks(r *registry) {
 	add(r, toolSpec{
 		name:  "webhook.delete",
 		title: "Delete webhook",
-		description: "Deletes a webhook by its handler url (webhook/delete): its events stop coming at once and the settings are gone. " +
-			"To pause it instead, use [[tool:webhook.set]] with status=disabled.",
+		description: "Deletes a webhook by its handler url (webhook/delete[[api_ref:webhook]]): its events stop coming at once and the settings are gone. " +
+			"Pausing instead is [[tool:webhook.set]] with status=disabled.",
 		annotations: dangerous(),
 		schema:      func(s *jsonschema.Schema) { minLength(s, "url", 1) },
 	}, func(ctx context.Context, c *caller, in webhookURLArg) *mcp.CallToolResult {

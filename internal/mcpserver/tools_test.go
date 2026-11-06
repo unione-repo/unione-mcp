@@ -148,7 +148,7 @@ func TestSetWebhook_SendsTheSettingsInOneCall(t *testing.T) {
 
 func TestListProjects_ReturnsProjectKeysWhole(t *testing.T) {
 	t.Parallel()
-	list := `{"status":"success","projects":[{"id":"456","api_key":"6x7mxb5ehyzt1wjd8kpf7qsyrdshsdo3dnm4snxa","name":"Shop"}]}`
+	list := `{"status":"success","projects":[{"id":"456","api_key":"test-project-api-key-placeholder-000000","name":"Shop"}]}`
 	fake := newFakeAPI(t).answer("project/list", http.StatusOK, list)
 
 	res := callVia(t, fake, testConfig(), "project.list", nil)

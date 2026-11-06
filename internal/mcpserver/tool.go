@@ -45,11 +45,13 @@ func add[In any](r *registry, spec toolSpec, h handler[In]) {
 	}
 	b := r.deps.cfg.Brand
 	renderDescriptions(schema, b)
+	title := b.Render(spec.title)
 	annotations := spec.annotations
+	annotations.Title = title
 	annotations.OpenWorldHint = ptr(spec.openWorld)
 	mcp.AddTool(r.server, &mcp.Tool{
 		Name:        b.Tool(spec.name),
-		Title:       b.Render(spec.title),
+		Title:       title,
 		Description: b.Render(spec.description),
 		Annotations: &annotations,
 		InputSchema: schema,
@@ -81,7 +83,8 @@ func (r *registry) offers(spec toolSpec) bool {
 }
 
 // The three classes of the task map onto MCP annotations; clients ask the user
-// before a destructive call, the server itself never does.
+// before a destructive call, the server itself never does. readOnlyHint=false of
+// the write classes reaches the wire through explicitReadOnlyHint.
 func readOnly() mcp.ToolAnnotations {
 	return mcp.ToolAnnotations{ReadOnlyHint: true, IdempotentHint: true, DestructiveHint: ptr(false)}
 }

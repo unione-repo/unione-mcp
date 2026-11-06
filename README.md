@@ -122,7 +122,7 @@ Every tool has a class, sent to the client as MCP annotations:
 | Confirmed emails | `list_confirmed_emails` | List confirmed emails | read |
 | Confirmed emails | `add_confirmed_email` | Add confirmed email | write |
 | Confirmed emails | `delete_confirmed_email` | Delete confirmed email | **dangerous** |
-| Sending | `send_email` | Send email | **dangerous** |
+| Sending | `send_email` | Send email (billed) | **dangerous** |
 | Templates | `list_templates` | List templates | read |
 | Templates | `get_template` | Get template | read |
 | Templates | `set_template` | Create or overwrite template | **dangerous** |

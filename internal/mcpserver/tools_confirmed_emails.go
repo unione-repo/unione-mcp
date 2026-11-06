@@ -31,8 +31,9 @@ func registerConfirmedEmails(r *registry) {
 		title: "Add confirmed email",
 		description: "Adds a recipient address for sandbox sending (confirmed-email/create) and SENDS a confirmation email to it; " +
 			"the address stays unconfirmed until its owner clicks the link. The link lives 48 hours and works once, and there is " +
-			"no resend: if it expired, remove the address with [[tool:confirmed_email.delete]] and add it again. " +
-			"At most 10 addresses per account. Add only the user's own addresses. Check progress with [[tool:confirmed_email.list]]. " +
+			"no resend: an expired link is replaced by removing the address with [[tool:confirmed_email.delete]] and adding it again. " +
+			"At most 10 addresses per account. The confirmation letter goes to the address itself, so it must belong to the user. " +
+			"[[tool:confirmed_email.list]] shows the status. " +
 			"Account keys only.",
 		annotations: write(),
 		openWorld:   true,
@@ -45,7 +46,7 @@ func registerConfirmedEmails(r *registry) {
 		name:  "confirmed_email.delete",
 		title: "Delete confirmed email",
 		description: "Removes an address from the confirmed list (confirmed-email/delete): mail from the sandbox domain can no longer go to it. " +
-			"Also the way to get a fresh confirmation link: delete, then [[tool:confirmed_email.add]] again. Account keys only.",
+			"Deleting an address and adding it again with [[tool:confirmed_email.add]] sends a fresh confirmation link. Account keys only.",
 		annotations: dangerous(),
 		schema:      func(s *jsonschema.Schema) { minLength(s, "email", 3) },
 	}, func(ctx context.Context, c *caller, in confirmedEmailArg) *mcp.CallToolResult {
