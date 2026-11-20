@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"regexp"
 	"strings"
 	"sync"
 	"testing"
@@ -110,6 +111,24 @@ func decodeJSON[T any](t *testing.T, body []byte) T {
 		t.Fatalf("decode %q: %v", body, err)
 	}
 	return v
+}
+
+// assertChallengeDescribesMCP follows resource_metadata from a challenge: RFC 9728 §3.3 requires
+// the document's resource to equal the URL the client called, and Claude, VS Code and Cursor check it.
+func assertChallengeDescribesMCP(t *testing.T, r *stand, header string) {
+	t.Helper()
+	m := regexp.MustCompile(`resource_metadata="([^"]+)"`).FindStringSubmatch(header)
+	if m == nil {
+		t.Fatalf("WWW-Authenticate %q has no resource_metadata", header)
+	}
+	metadata := r.call(t, http.MethodGet, strings.TrimPrefix(m[1], r.opts.SelfURL), nil)
+	if metadata.Status != http.StatusOK {
+		t.Fatalf("advertised metadata status %d, want %d", metadata.Status, http.StatusOK)
+	}
+	got := decodeJSON[protectedResourceMetadata](t, metadata.Body)
+	if want := r.opts.SelfURL + "/mcp"; got.Resource != want || !reflect.DeepEqual(got.AuthorizationServers, []string{r.opts.AuthorizationServer}) {
+		t.Fatalf("advertised metadata %+v, want resource %q and its authorization server", got, want)
+	}
 }
 
 func TestRouter_HealthReportsOK(t *testing.T) {
@@ -233,18 +252,10 @@ func TestRouter_OAuthMode_MissingBearerChallenges(t *testing.T) {
 			if res.Status != http.StatusUnauthorized {
 				t.Fatalf("status %d, want %d", res.Status, http.StatusUnauthorized)
 			}
-			if got, want := res.Header.Get("WWW-Authenticate"), `Bearer resource_metadata="`+r.opts.SelfURL+metadataPath+`"`; got != want {
+			if got, want := res.Header.Get("WWW-Authenticate"), `Bearer resource_metadata="`+r.opts.SelfURL+metadataPath+`/mcp"`; got != want {
 				t.Fatalf("WWW-Authenticate %q, want %q", got, want)
 			}
-			discoveryURL := strings.TrimSuffix(strings.TrimPrefix(res.Header.Get("WWW-Authenticate"), `Bearer resource_metadata="`), `"`)
-			metadata := r.call(t, http.MethodGet, strings.TrimPrefix(discoveryURL, r.opts.SelfURL), nil)
-			if metadata.Status != http.StatusOK {
-				t.Fatalf("advertised metadata status %d, want %d", metadata.Status, http.StatusOK)
-			}
-			got := decodeJSON[protectedResourceMetadata](t, metadata.Body)
-			if got.Resource != r.opts.SelfURL || !reflect.DeepEqual(got.AuthorizationServers, []string{r.opts.AuthorizationServer}) {
-				t.Fatalf("advertised metadata %+v does not describe the origin and its authorization server", got)
-			}
+			assertChallengeDescribesMCP(t, r, res.Header.Get("WWW-Authenticate"))
 			if n := r.mcp.calls(); n != 0 {
 				t.Fatalf("MCP handler was called %d times", n)
 			}
@@ -292,7 +303,8 @@ func TestRouter_OAuthMode_RejectedTokenIsAnswered401(t *testing.T) {
 		t.Fatalf("status %d, want %d", res.Status, http.StatusUnauthorized)
 	}
 	challenge := res.Header.Get("WWW-Authenticate")
-	for _, part := range []string{`error="invalid_token"`, `resource_metadata="https://mcp.example.test` + metadataPath + `"`} {
+	assertChallengeDescribesMCP(t, r, challenge)
+	for _, part := range []string{`error="invalid_token"`, `resource_metadata="https://mcp.example.test` + metadataPath + `/mcp"`} {
 		if !strings.Contains(challenge, part) {
 			t.Fatalf("WWW-Authenticate %q lacks %s", challenge, part)
 		}
@@ -329,9 +341,6 @@ func TestRouter_OAuthMode_TokenTheAPIRefusesIsAnswered401BeforeMCP(t *testing.T)
 
 	if refused.Status != http.StatusUnauthorized || !strings.Contains(refused.Header.Get("WWW-Authenticate"), `error="invalid_token"`) {
 		t.Fatalf("refused token: got %d %q, want the invalid_token challenge", refused.Status, refused.Header.Get("WWW-Authenticate"))
-	}
-	if got := refused.Header.Get("WWW-Authenticate"); !strings.Contains(got, `resource_metadata="`+opts.SelfURL+metadataPath+`"`) {
-		t.Fatalf("refused token challenge %q does not advertise origin metadata", got)
 	}
 	if accepted.Status != http.StatusOK || key.Status != http.StatusOK {
 		t.Fatalf("accepted token %d, API key %d, want both served", accepted.Status, key.Status)
@@ -438,9 +447,6 @@ func TestRouter_KeyTheAPIRefusesIsAnswered401BeforeMCP(t *testing.T) {
 			wantMetadata := mode == config.AuthOAuth
 			if got := strings.Contains(refused.Header.Get("WWW-Authenticate"), "resource_metadata="); got != wantMetadata {
 				t.Fatalf("WWW-Authenticate %q: resource_metadata present %v, want %v", refused.Header.Get("WWW-Authenticate"), got, wantMetadata)
-			}
-			if wantMetadata && !strings.Contains(refused.Header.Get("WWW-Authenticate"), `resource_metadata="`+r.opts.SelfURL+metadataPath+`"`) {
-				t.Fatalf("refused key challenge %q does not advertise origin metadata", refused.Header.Get("WWW-Authenticate"))
 			}
 		})
 	}

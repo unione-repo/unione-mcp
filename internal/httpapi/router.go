@@ -66,8 +66,9 @@ func New(o Options) http.Handler {
 	}
 
 	if o.AuthMode == config.AuthOAuth {
-		// Each metadata document identifies its own resource; challenges advertise the origin.
-		// The /mcp document remains available for path-aware discovery.
+		// RFC 9728 §3.1: the metadata of the resource SelfURL/mcp lives at the well-known
+		// path with /mcp appended, and its `resource` must be exactly that URL. MCP clients
+		// try it first and fall back to the root one, which describes the origin.
 		mux.HandleFunc("GET "+metadataPath+mcpPath, func(w http.ResponseWriter, _ *http.Request) {
 			writeJSON(w, http.StatusOK, protectedResourceMetadata(o, o.SelfURL+mcpPath))
 		})
@@ -238,7 +239,8 @@ func challenge(w http.ResponseWriter, o Options) {
 	})
 }
 
-func resourceMetadataURL(o Options) string { return o.SelfURL + metadataPath }
+// A challenge must lead to the document whose resource is the URL just called (RFC 9728 §3.3).
+func resourceMetadataURL(o Options) string { return o.SelfURL + metadataPath + mcpPath }
 
 // bufferedResponse holds the MCP answer until it is known whether the token was
 // accepted. A stateless call is one short JSON-RPC exchange, so nothing streams.

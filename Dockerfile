@@ -1,4 +1,4 @@
-FROM golang:1.26.10-alpine AS build
+FROM golang:1.26.11-alpine AS build
 WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
@@ -7,6 +7,7 @@ ARG VERSION=dev
 RUN CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -X main.version=${VERSION}" -o /unione-mcp ./cmd/unione-mcp
 
 FROM gcr.io/distroless/static-debian12:nonroot
+LABEL io.modelcontextprotocol.server.name="io.unione/mcp"
 COPY --from=build /unione-mcp /unione-mcp
 # The working directory takes the auto-picked port file and an optional .env.
 WORKDIR /home/nonroot

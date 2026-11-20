@@ -45,17 +45,14 @@ func TestE2E_Protocol_OAuthModeChallengesAndAdvertisesTheAuthorizationServer(t *
 
 	assertHttpResponse.Status(t, challenge, http.StatusUnauthorized)
 	assertHttpResponse.HeaderContains(t, challenge, "WWW-Authenticate",
-		`resource_metadata="`+server.BaseURL+`/.well-known/oauth-protected-resource"`)
+		`resource_metadata="`+server.BaseURL+`/.well-known/oauth-protected-resource/mcp"`)
 	assertHttpResponse.Status(t, metadata, http.StatusOK)
 	assertHttpResponse.JSONIncludes(t, metadata, map[string]any{
 		"resource":              server.MCPEndpoint,
 		"authorization_servers": []string{arrangeServer.AuthorizationServer},
 	})
 	assertHttpResponse.Status(t, originMetadata, http.StatusOK)
-	assertHttpResponse.JSONIncludes(t, originMetadata, map[string]any{
-		"resource":              server.BaseURL,
-		"authorization_servers": []string{arrangeServer.AuthorizationServer},
-	})
+	assertHttpResponse.JSONIncludes(t, originMetadata, map[string]any{"resource": server.BaseURL})
 }
 
 func TestE2E_Protocol_ServesTheOpenAIAppsChallenge(t *testing.T) {

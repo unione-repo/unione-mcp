@@ -32,7 +32,7 @@ type createProjectArgs struct {
 }
 
 type updateProjectArgs struct {
-	ProjectID     string `json:"project_id,omitempty" jsonschema:"project id from [[tool:project.list]] — preferred way to pick the project"`
+	ProjectID     string `json:"project_id,omitempty" jsonschema:"project id from [[tool:project.list]]; the preferred identifier"`
 	ProjectAPIKey string `json:"project_api_key,omitempty" jsonschema:"the project's API key, only when the id is unknown"`
 	Name          string `json:"name" jsonschema:"project name; required on every update; the current name keeps it"`
 	projectFields
@@ -42,14 +42,14 @@ type updateProjectArgs struct {
 }
 
 type deleteProjectArgs struct {
-	ProjectID     string `json:"project_id,omitempty" jsonschema:"project id from [[tool:project.list]] — preferred way to pick the project"`
+	ProjectID     string `json:"project_id,omitempty" jsonschema:"project id from [[tool:project.list]]; the preferred identifier"`
 	ProjectAPIKey string `json:"project_api_key,omitempty" jsonschema:"the project's API key, only when the id is unknown"`
 }
 
 const (
 	projectIDPattern = `^[0-9]+$`
 	projectsOnly     = "Projects need an account key with projects enabled; until they are enabled for the account these tools answer an error."
-	projectsHint     = " If the account does not have projects enabled yet, tell the user to ask [[name]] support to enable them."
+	projectsHint     = " If the account does not have projects enabled yet, [[name]] support enables them on request."
 )
 
 func registerProjects(r *registry) {
@@ -91,7 +91,7 @@ func registerProjects(r *registry) {
 	add(r, toolSpec{
 		name:  "project.update",
 		title: "Update project",
-		description: "OVERWRITES a project's settings (project/update). Pick the project by project_id (preferred) or project_api_key, " +
+		description: "OVERWRITES a project's settings (project/update). The project is identified by project_id (preferred) or project_api_key, " +
 			"one of them. name is required every time; fields left out are cleared, backend_domain_id and unsubscribe_page_id included. " +
 			"The current values are returned by [[tool:project.list]]. send_enabled=false stops the project's sending at once; " +
 			"reset_email_counter sets its counter back to 0. " + projectsOnly,
@@ -124,7 +124,7 @@ func registerProjects(r *registry) {
 		name:  "project.delete",
 		title: "Delete project",
 		description: "Deletes a project (project/delete): its API key stops working at once, so every integration using it stops sending. " +
-			"The project goes to the trash and only [[name]] support can restore it. Pick it by project_id (preferred) or project_api_key. " +
+			"The project goes to the trash and only [[name]] support can restore it. The project is identified by project_id (preferred) or project_api_key. " +
 			projectsOnly,
 		annotations: dangerous(),
 		schema:      func(s *jsonschema.Schema) { pattern(s, "project_id", projectIDPattern) },

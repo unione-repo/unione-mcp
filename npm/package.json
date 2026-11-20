@@ -1,6 +1,7 @@
 {
   "name": "unione-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
+  "mcpName": "io.unione/mcp",
   "description": "MCP server for the UniOne transactional email API",
   "bin": {
     "unione-mcp": "bin/run.js"

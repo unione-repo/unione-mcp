@@ -86,7 +86,7 @@ func TestE2E_Relay_OAuthModeRefusedTokenIsAChallenge(t *testing.T) {
 	assertHttpResponse.Status(t, resp, http.StatusUnauthorized)
 	assertHttpResponse.HeaderContains(t, resp, "WWW-Authenticate", `error="invalid_token"`)
 	assertHttpResponse.HeaderContains(t, resp, "WWW-Authenticate",
-		`resource_metadata="`+server.BaseURL+`/.well-known/oauth-protected-resource"`)
+		`resource_metadata="`+server.BaseURL+`/.well-known/oauth-protected-resource/mcp"`)
 }
 
 // MCP authorization wants the 401 already on initialize: a client with an expired

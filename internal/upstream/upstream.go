@@ -60,20 +60,20 @@ type Result struct {
 }
 
 func (c *Client) MsgUnreachable() string {
-	return c.Brand.Render("The [[name]] API did not answer (network error or timeout). Try again; if it keeps failing, tell the user the service is unavailable right now.")
+	return c.Brand.Render("The [[name]] API did not answer (network error or timeout). Such failures are often temporary; if it keeps happening, the service is unavailable right now.")
 }
 
 func (c *Client) MsgUnauthorized() string {
-	return c.Brand.Render("No [[name]] API key reached this server. Ask the user to put their [[name]] API key into the MCP client config " +
-		"(header Authorization: Bearer <key>, or [[api_key_env]] for the local server) and reconnect.")
+	return c.Brand.Render("No [[name]] API key reached this server. The key goes into the MCP client config " +
+		"(header Authorization: Bearer <key>, or [[api_key_env]] for the local server) and takes effect after a reconnect.")
 }
 
 func (c *Client) MsgTooLarge() string {
-	return c.Brand.Render("The [[name]] API response was too large to handle. Narrow the request (smaller limit, fewer fields).")
+	return c.Brand.Render("The [[name]] API response was too large to handle. A narrower request (smaller limit, fewer fields) fits.")
 }
 
 func (c *Client) MsgRateLimited() string {
-	return c.Brand.Render("[[name]] is rate-limiting this key (HTTP 429). Wait a little before the next call and do not retry in a loop.")
+	return c.Brand.Render("[[name]] is rate-limiting this key (HTTP 429). The limit clears after a short pause; calls repeated right away are refused too.")
 }
 
 func (c *Client) Do(ctx context.Context, credential auth.Credential, method string, body map[string]any) Result {
@@ -254,7 +254,7 @@ func (c *Client) explain(status int, body string, kind auth.Kind) string {
 	if e, ok := parseAPIError(body); ok {
 		reason = e.reason()
 	} else if looksLikeHTML(body) {
-		return fmt.Sprintf(c.Brand.Render("The [[name]] API answered HTTP %d with an HTML page instead of JSON — [[api_url_env]] is probably wrong; tell the user the server looks misconfigured."), status)
+		return fmt.Sprintf(c.Brand.Render("The [[name]] API answered HTTP %d with an HTML page instead of JSON — [[api_url_env]] is probably wrong, so the server looks misconfigured."), status)
 	} else {
 		reason = truncate(strings.TrimSpace(body), 300)
 	}
@@ -268,20 +268,20 @@ func (c *Client) explain(status int, body string, kind auth.Kind) string {
 
 	switch {
 	case status == http.StatusUnauthorized && kind == auth.Bearer:
-		return c.Brand.Render("[[name]] rejected the access token (expired or revoked). Ask the user to re-authorize the MCP connection.") + quoted
+		return c.Brand.Render("[[name]] rejected the access token (expired or revoked). The MCP connection needs to be re-authorized.") + quoted
 	case status == http.StatusUnauthorized:
-		return c.Brand.Render("[[name]] rejected the API key. Ask the user to check the key in the MCP client config: it must be an account or project "+
+		return c.Brand.Render("[[name]] rejected the API key from the MCP client config: it must be an account or project "+
 			"API key from the [[name]] account settings.") + quoted
 	case status == http.StatusForbidden:
 		return c.Brand.Render("[[name]] refused this action for the current key (account or tariff limits, permissions, or a project key where an account key is needed).") + quoted
 	case status == http.StatusNotFound:
-		return c.Brand.Render("[[name]] does not know this API method (HTTP 404): either [[api_url_env]] is wrong or this [[name]] installation does not have the method yet. Tell the user the tool is unavailable here.") + quoted
+		return c.Brand.Render("[[name]] does not know this API method (HTTP 404): either [[api_url_env]] is wrong or this [[name]] installation does not have the method yet, so this tool is unavailable here.") + quoted
 	case status == http.StatusRequestEntityTooLarge:
-		return c.Brand.Render("[[name]] refused the request as too large (the API accepts up to 10 MB). Send fewer or smaller attachments.") + quoted
+		return c.Brand.Render("[[name]] refused the request as too large (the API accepts up to 10 MB); fewer or smaller attachments fit.") + quoted
 	case status == http.StatusTooManyRequests:
 		return c.MsgRateLimited() + quoted
 	case status >= 500:
-		return c.Brand.Render("The [[name]] API failed on its side. Try again a bit later; if it repeats, tell the user to contact [[name]] support with the Error ID.") + quoted
+		return c.Brand.Render("The [[name]] API failed on its side. Such failures are often temporary; if it repeats, [[name]] support can trace it by the Error ID.") + quoted
 	}
 	if reason == "" {
 		return fmt.Sprintf("%s rejected the request (HTTP %d) without a reason.", c.Brand.Name, status)

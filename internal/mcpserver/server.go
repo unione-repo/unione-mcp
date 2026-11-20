@@ -53,7 +53,7 @@ func recoverToolPanics(log *slog.Logger) mcp.Middleware {
 			defer func() {
 				if r := recover(); r != nil {
 					log.Error("tool call panicked", "method", method, "panic", r, "stack", string(debug.Stack()))
-					result, err = errText("The server hit an internal error on this call. Try again; if it repeats, report it."), nil
+					result, err = errText("The server hit an internal error on this call. Such errors are usually one-off; a repeat points to a bug in the server."), nil
 				}
 			}()
 			return next(ctx, method, req)

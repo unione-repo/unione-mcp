@@ -183,7 +183,7 @@ func TestProjects_DisabledProjectsPointToSupport(t *testing.T) {
 
 	text := resultText(t, res)
 	if !res.IsError || !strings.Contains(text, "No rights") || !strings.Contains(text, "support") {
-		t.Fatalf("want the API's text and a hint to ask support, got %s", text)
+		t.Fatalf("want the API's text and a hint about support, got %s", text)
 	}
 }
 
@@ -195,7 +195,7 @@ func TestProjects_DisabledProjectsHintNamesTheBrand(t *testing.T) {
 	text := resultText(t, callVia(t, fake, testConfig(), "project.list", nil))
 
 	assertBrandedText(t, "projects hint", text)
-	if !strings.Contains(text, "ask "+b.Name+" support") {
+	if !strings.Contains(text, b.Name+" support enables them") {
 		t.Errorf("want the hint to name %s support, got %s", b.Name, text)
 	}
 }
